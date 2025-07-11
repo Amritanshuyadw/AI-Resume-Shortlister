@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Resume Shortlister</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            text-align: center;
+            color: #343a40;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>AI Resume Shortlister</h1>
+
+    <h3>Upload Job Description PDF:</h3>
+    <input type="file" id="jobDescriptionFile" accept=".pdf"><br><br>
+
+    <h3>Upload Resume PDFs:</h3>
+    <input type="file" id="resumeFiles" multiple accept=".pdf"><br><br>
+
+    <button onclick="submitFiles()">Shortlist</button>
+
+    <h3>Results:</h3>
+    <div id="results"></div>
+
+    <script>
+        async function submitFiles() {
+            const jobFile = document.getElementById("jobDescriptionFile").files[0];
+            const resumeFiles = document.getElementById("resumeFiles").files;
+
+            if (!jobFile || resumeFiles.length === 0) {
+                alert("Please upload both job description and at least one resume.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("job_description", jobFile);
+            for (let file of resumeFiles) {
+                formData.append("resumes", file);
+            }
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "";
+
+            data.forEach((item, index) => {
+                const div = document.createElement("div");
+                div.className = "result";
+                div.innerHTML = `
+                    <b>Rank ${index + 1}: ${item.filename}</b><br>
+                    Score: ${item.score}<br>
+                    ✅ Matched Skills: ${item.matched_skills}<br>
+                    ❌ Missing Skills: ${item.missing_skills}
+                `;
+                resultsDiv.appendChild(div);
+            });
+        }
+    </script>
+
+</body>
+</html>
